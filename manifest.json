@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "Media Downloader",
+  "version": "0.5.1",
+  "description": "Manually download and merge images, save videos, and convert short animated media to GIF locally on supported pages.",
+  "permissions": [
+    "downloads",
+    "storage",
+    "webRequest",
+    "offscreen"
+  ],
+  "host_permissions": [
+    "https://x.com/*",
+    "https://pbs.twimg.com/*",
+    "https://video.twimg.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://x.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://x.com/*"],
+      "js": ["page-hook.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    }
+  ],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "action": {
+    "default_title": "Media Downloader 設定"
+  }
+}
