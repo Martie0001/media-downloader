@@ -1,0 +1,13 @@
+.DS_Store
+Thumbs.db
+*.zip
+/downloads/
+/samples/
+/test-output/
+/*.mp4
+/*.webm
+/*.gif
+/*.jpg
+/*.jpeg
+/*.jfif
+/*.webp

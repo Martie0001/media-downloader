@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Media Downloader 設定</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div class="app-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3v12" />
+          <path d="m8 11 4 4 4-4" />
+          <path d="M5 20h14" />
+        </svg>
+      </div>
+      <div>
+        <h1>Media Downloader</h1>
+        <p>V0.5.1 · 多圖合併 / 圖片 / MP4 / GIF 本機轉檔</p>
+      </div>
+    </header>
+
+    <section class="card">
+      <h2>下載位置</h2>
+      <p class="muted">圖片、合併圖片、MP4、GIF 都存到同一個資料夾。未選擇時使用瀏覽器預設下載位置。</p>
+      <div class="folder-row">
+        <div class="folder-status">
+          <span class="label">目前資料夾</span>
+          <strong id="folderName">未選擇</strong>
+          <span id="folderPermission" class="status">使用瀏覽器預設下載位置</span>
+        </div>
+        <button id="chooseFolder" class="primary" type="button">選擇資料夾</button>
+      </div>
+      <p class="note">Chrome 對桌面、下載等部分系統資料夾可能限制直接授權；不選資料夾仍可正常使用。</p>
+    </section>
+
+    <section class="card">
+      <h2>圖片下載</h2>
+      <fieldset>
+        <legend>預設圖片大小</legend>
+        <label class="choice">
+          <input type="radio" name="imageQuality" value="original" />
+          <span><strong>最大可用尺寸</strong><small>要求可用的原始尺寸 <code>name=orig</code></small></span>
+        </label>
+        <label class="choice">
+          <input type="radio" name="imageQuality" value="displayed" />
+          <span><strong>網頁目前顯示尺寸</strong><small>沿用頁面已載入的圖片網址</small></span>
+        </label>
+      </fieldset>
+
+      <label class="toggle-row">
+        <span>
+          <strong>顯示第二個尺寸下載按鈕</strong>
+          <small>圖片右上角同時提供最大尺寸與目前顯示尺寸</small>
+        </span>
+        <input id="showAlternateButton" type="checkbox" />
+      </label>
+
+      <label class="toggle-row">
+        <span>
+          <strong>JPEG 統一使用 .jpg</strong>
+          <small>避免 Chrome 把 JPEG 存成 .jfif</small>
+        </span>
+        <input id="normalizeJpeg" type="checkbox" />
+      </label>
+    </section>
+
+    <section class="card">
+      <h2>多圖片合併</h2>
+      <label class="toggle-row no-top-border">
+        <span>
+          <strong>顯示合併下載按鈕</strong>
+          <small>同一篇貼文有 2–4 張圖片時，一次合成一張再下載</small>
+        </span>
+        <input id="mergeMultipleImages" type="checkbox" />
+      </label>
+
+      <div id="mergeControls">
+        <div class="select-row">
+          <div>
+            <strong>合併方式</strong>
+            <small>自動會依目前頁面排列判斷左右 / 上下；3–4 張使用網格</small>
+          </div>
+          <select id="mergeLayout">
+            <option value="auto">自動</option>
+            <option value="horizontal">左 → 右</option>
+            <option value="vertical">上 → 下</option>
+          </select>
+        </div>
+
+        <div class="select-row">
+          <div>
+            <strong>合併圖片來源</strong>
+            <small>決定合併時抓最大圖或網頁目前尺寸</small>
+          </div>
+          <select id="mergeImageQuality">
+            <option value="original">最大可用尺寸</option>
+            <option value="displayed">網頁目前顯示尺寸</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>GIF / 動圖</h2>
+      <label class="toggle-row no-top-border">
+        <span>
+          <strong>短動圖自動轉成 GIF</strong>
+          <small>動態 GIF 的來源可能是 MP4；符合限制時在本機轉成 .gif</small>
+        </span>
+        <input id="convertShortGif" type="checkbox" />
+      </label>
+
+      <div id="gifControls">
+        <div class="number-row">
+          <div>
+            <strong>轉 GIF 最長秒數</strong>
+            <small>超過這個長度就直接下載 MP4</small>
+          </div>
+          <label class="number-control">
+            <input id="gifMaxDuration" type="number" min="1" max="30" step="1" inputmode="numeric" />
+            <span>秒</span>
+          </label>
+        </div>
+
+        <div class="number-row">
+          <div>
+            <strong>GIF 尺寸縮放</strong>
+            <small>100% = 按來源尺寸轉檔；縮小可大幅降低 GIF 檔案大小</small>
+            <div class="preset-row">
+              <button type="button" data-gif-scale="25">25%</button>
+              <button type="button" data-gif-scale="50">50%</button>
+              <button type="button" data-gif-scale="75">75%</button>
+              <button type="button" data-gif-scale="100">100%</button>
+            </div>
+          </div>
+          <label class="number-control">
+            <input id="gifScalePercent" type="number" min="10" max="100" step="5" inputmode="numeric" />
+            <span>%</span>
+          </label>
+        </div>
+
+        <div class="number-row">
+          <div>
+            <strong>GIF 幀率</strong>
+            <small>越高越順，但檔案也會變大</small>
+          </div>
+          <label class="number-control">
+            <input id="gifFps" type="number" min="5" max="30" step="1" inputmode="numeric" />
+            <span>FPS</span>
+          </label>
+        </div>
+      </div>
+
+      <p class="note">預設：8 秒、100%、10 FPS。轉檔失敗或超過秒數限制時，自動退回下載 MP4。一般影片不受這些設定影響。</p>
+    </section>
+
+    <section class="card compact">
+      <h2>影片</h2>
+      <p>一般影片維持下載最高可取得的 MP4；只有頁面標記為動態 GIF 的內容才會進行 GIF 轉檔。</p>
+    </section>
+
+    <div class="actions">
+      <span id="saveState" class="save-state"></span>
+      <button id="saveSettings" class="primary" type="button">儲存設定</button>
+    </div>
+  </main>
+  <script src="options.js"></script>
+</body>
+</html>
