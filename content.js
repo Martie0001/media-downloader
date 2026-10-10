@@ -1,4 +1,4 @@
-console.log("[Media Downloader] V0.5.1 loaded");
+console.log("[Media Downloader] V0.5.2 loaded");
 
 const XDL_GROUP_CLASS = "xdl-button-group";
 const XDL_BUTTON_CLASS = "xdl-button";
