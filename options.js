@@ -8,7 +8,7 @@ const DEFAULT_SETTINGS = {
   showAlternateButton: false,
   normalizeJpeg: true,
   mergeMultipleImages: true,
-  mergeLayout: "auto",
+  mergeLayout: "horizontal",
   mergeImageQuality: "original",
   convertShortGif: true,
   gifMaxDuration: 8,
@@ -149,9 +149,8 @@ async function loadSettings() {
   normalizeJpeg.checked = Boolean(settings.normalizeJpeg);
 
   mergeMultipleImages.checked = Boolean(settings.mergeMultipleImages);
-  mergeLayout.value = ["auto", "horizontal", "vertical"].includes(settings.mergeLayout)
-    ? settings.mergeLayout
-    : "auto";
+  // V0.5.3: migrate all previous auto / vertical choices to one-row horizontal merge.
+  mergeLayout.value = "horizontal";
   mergeImageQuality.value = settings.mergeImageQuality === "displayed" ? "displayed" : "original";
   updateMergeControls();
 
@@ -186,7 +185,7 @@ async function saveSettings() {
     showAlternateButton: showAlternateButton.checked,
     normalizeJpeg: normalizeJpeg.checked,
     mergeMultipleImages: mergeMultipleImages.checked,
-    mergeLayout: mergeLayout.value,
+    mergeLayout: "horizontal",
     mergeImageQuality: mergeImageQuality.value,
     convertShortGif: convertShortGif.checked,
     gifMaxDuration: normalizedGifDuration,

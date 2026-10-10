@@ -1,4 +1,4 @@
-console.log("[Media Downloader] V0.5.2 loaded");
+console.log("[Media Downloader] V0.5.3 loaded");
 
 const XDL_GROUP_CLASS = "xdl-button-group";
 const XDL_BUTTON_CLASS = "xdl-button";
@@ -25,7 +25,7 @@ const DEFAULT_SETTINGS = {
   showAlternateButton: false,
   normalizeJpeg: true,
   mergeMultipleImages: true,
-  mergeLayout: "auto",
+  mergeLayout: "horizontal",
   mergeImageQuality: "original",
   convertShortGif: true,
   gifMaxDuration: 8,
@@ -487,20 +487,10 @@ function validPhotoContainersInArticle(article) {
   });
 }
 
-function inferMergeLayout(containers) {
-  if (settings.mergeLayout === "horizontal" || settings.mergeLayout === "vertical") {
-    return settings.mergeLayout;
-  }
-
-  if (containers.length === 2) {
-    const a = containers[0].getBoundingClientRect();
-    const b = containers[1].getBoundingClientRect();
-    const dx = Math.abs((a.left + a.width / 2) - (b.left + b.width / 2));
-    const dy = Math.abs((a.top + a.height / 2) - (b.top + b.height / 2));
-    return dx >= dy ? "horizontal" : "vertical";
-  }
-
-  return "grid";
+function inferMergeLayout(_containers) {
+  // Multi-image downloads are intentionally stitched into one continuous row.
+  // Do not mirror X's on-screen grid because a 3rd/4th image would wrap below.
+  return "horizontal";
 }
 
 function mergedFilenameFrom(items) {

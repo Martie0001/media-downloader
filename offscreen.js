@@ -342,9 +342,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     (async () => {
       try {
         const items = Array.isArray(message.items) ? message.items.slice(0, 4) : [];
-        const layout = ["horizontal", "vertical", "grid"].includes(message.layout)
-          ? message.layout
-          : "grid";
+        // V0.5.3: merged post images always stay on a single row.
+        // Force horizontal here as a second safeguard for stale settings/content scripts.
+        const layout = "horizontal";
         const merged = await mergeImages(items, layout, message.filename || `x-merged-${Date.now()}.jpg`);
         const saveResult = await saveBlob(merged.blob, message.filename || `x-merged-${Date.now()}.jpg`);
         sendResponse({
