@@ -71,6 +71,34 @@ async function makeUniqueFilename(directoryHandle, requestedName) {
   return `${base}-${Date.now()}${ext}`;
 }
 
+async function resolveImageDownloadUrl(rawUrl) {
+  const parsed = new URL(rawUrl);
+  if (parsed.hostname !== "pbs.twimg.com" || !parsed.pathname.startsWith("/media/")) {
+    return rawUrl;
+  }
+
+  const requestedName = parsed.searchParams.get("name");
+  const names = [requestedName];
+  if (requestedName === "orig") names.push("4096x4096", "large");
+  else if (requestedName === "4096x4096") names.push("large");
+
+  for (const name of [...new Set(names)]) {
+    if (name) parsed.searchParams.set("name", name);
+    const candidate = parsed.toString();
+    let response;
+    try {
+      response = await fetch(candidate, { method: "HEAD", cache: "no-store" });
+    } catch (_) {
+      // A CDN that blocks HEAD may still allow browser downloads.
+      return candidate;
+    }
+    const contentType = response.headers.get("content-type") || "";
+    if (response.ok && contentType.startsWith("image/")) return candidate;
+  }
+
+  throw new Error("圖片網址已失效，未建立下載項目。請重新整理貼文後再試。");
+}
+
 async function downloadToSelectedFolder(url, requestedFilename) {
   const directoryHandle = await getStoredDirectoryHandle();
   if (!directoryHandle) {
@@ -318,7 +346,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     (async () => {
       try {
         const filename = sanitizeFilename(message.filename || `media-${Date.now()}`);
-        const folderResult = await downloadToSelectedFolder(message.url, filename);
+        const downloadUrl = await resolveImageDownloadUrl(message.url);
+        const folderResult = await downloadToSelectedFolder(downloadUrl, filename);
 
         if (folderResult.ok) {
           sendResponse(folderResult);
@@ -330,7 +359,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           return;
         }
 
-        const browserResult = await downloadWithBrowser(message.url, filename);
+        const browserResult = await downloadWithBrowser(downloadUrl, filename);
         sendResponse(browserResult);
       } catch (error) {
         sendResponse({ ok: false, error: error?.message || String(error) });

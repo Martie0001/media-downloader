@@ -1,4 +1,4 @@
-console.log("[Media Downloader] V0.5.4 loaded");
+console.log("[Media Downloader] V0.5.5 loaded");
 
 const XDL_GROUP_CLASS = "xdl-button-group";
 const XDL_BUTTON_CLASS = "xdl-button";
@@ -187,10 +187,6 @@ function getImageDownloadInfo(img, quality) {
 
   try {
     const url = new URL(rawUrl);
-    if (quality === "original" && url.hostname === "pbs.twimg.com") {
-      url.searchParams.set("name", "orig");
-    }
-
     let format = url.searchParams.get("format");
     if (!format) {
       const extension = url.pathname.match(/\.([a-zA-Z0-9]+)$/);
@@ -198,6 +194,10 @@ function getImageDownloadInfo(img, quality) {
     }
 
     format = (format || "jpg").toLowerCase();
+    if (quality === "original" && url.hostname === "pbs.twimg.com") {
+      // X's CDN returns HTTP 404 for WebP ?name=orig; the largest sized variant works.
+      url.searchParams.set("name", ["webp", "avif"].includes(format) ? "4096x4096" : "orig");
+    }
     if (settings.normalizeJpeg && ["jpeg", "jfif", "pjpeg"].includes(format)) {
       format = "jpg";
     }

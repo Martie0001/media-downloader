@@ -195,8 +195,26 @@ async function convertMp4ToGif(url, maxDuration, scalePercent, fps) {
 }
 
 async function loadBitmap(url) {
-  const response = await fetch(url, { cache: "no-store", credentials: "include" });
+  let response = await fetch(url, { cache: "no-store", credentials: "include" });
+
+  if (response.status === 404) {
+    const candidate = new URL(url);
+    const name = candidate.searchParams.get("name");
+    if (candidate.hostname === "pbs.twimg.com" && candidate.pathname.startsWith("/media/") &&
+        (name === "orig" || name === "4096x4096")) {
+      const fallbacks = name === "orig" ? ["4096x4096", "large"] : ["large"];
+      for (const size of fallbacks) {
+        candidate.searchParams.set("name", size);
+        response = await fetch(candidate.toString(), { cache: "no-store", credentials: "include" });
+        if (response.ok) break;
+      }
+    }
+  }
+
   if (!response.ok) throw new Error(`圖片下載失敗：HTTP ${response.status}`);
+  if (!(response.headers.get("content-type") || "").startsWith("image/")) {
+    throw new Error("圖片來源回傳的內容不是圖片");
+  }
   const blob = await response.blob();
   return await createImageBitmap(blob);
 }
