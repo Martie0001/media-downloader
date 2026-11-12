@@ -1,4 +1,4 @@
-console.log("[Media Downloader] V0.5.3 loaded");
+console.log("[Media Downloader] V0.5.4 loaded");
 
 const XDL_GROUP_CLASS = "xdl-button-group";
 const XDL_BUTTON_CLASS = "xdl-button";
@@ -262,11 +262,10 @@ function findLocalVideoResource(posterUrl) {
     .filter((url) => url.includes("video.twimg.com") && /\.mp4(?:\?|$)/i.test(url));
   if (!resources.length) return null;
 
-  let candidates = resources;
-  if (mediaKey) {
-    const matching = resources.filter((url) => url.includes(mediaKey));
-    if (matching.length) candidates = matching;
-  }
+  // Never download a different tweet's video just because it was loaded earlier.
+  const candidates = mediaKey
+    ? resources.filter((url) => url.includes(mediaKey))
+    : resources.length === 1 ? resources : [];
 
   candidates.sort((a, b) => resolutionScore(b) - resolutionScore(a));
   return candidates[0] || null;
@@ -476,15 +475,48 @@ function addImageButtons(container, img) {
   }
 }
 
+// X has two frontends. The newer one does not always render tweetPhoto.
+function isTweetMediaImage(img) {
+  const source = img.currentSrc || img.src || "";
+  try {
+    const url = new URL(source, location.href);
+    return url.hostname === "pbs.twimg.com" && url.pathname.startsWith("/media/");
+  } catch (_) {
+    return false;
+  }
+}
+
+function photoContainerFor(img) {
+  const oldContainer = img.closest('[data-testid="tweetPhoto"]');
+  if (oldContainer) return oldContainer;
+
+  // A photo link is the safest overlay target; otherwise use the image wrapper.
+  const photoLink = img.closest('a[href*="/photo/"]');
+  if (photoLink) return photoLink;
+  const parent = img.parentElement;
+  return parent?.tagName === "PICTURE" ? parent.parentElement : parent;
+}
+
 function validPhotoContainersInArticle(article) {
-  return [...article.querySelectorAll('[data-testid="tweetPhoto"]')].filter((container) => {
-    const nearestArticle = container.closest('article[data-testid="tweet"], article');
-    if (nearestArticle !== article) return false;
-    if (container.querySelector("video")) return false;
-    if (container.querySelector('[data-testid="videoPlayer"]')) return false;
-    const img = container.querySelector("img");
-    return Boolean(img && !isVideoThumbnail(img));
+  const containers = [];
+  const seenMedia = new Set();
+
+  article.querySelectorAll("img").forEach((img) => {
+    if (!isTweetMediaImage(img) || img.closest("article") !== article) return;
+    if (img.closest('[data-testid="card.wrapper"]')) return;
+    if (img.closest('[data-testid="videoPlayer"], [data-testid="videoComponent"]')) return;
+
+    const container = photoContainerFor(img);
+    if (!container || container.querySelector("video")) return;
+
+    // Responsive layouts may render the same media URL more than once.
+    const key = new URL(img.currentSrc || img.src).pathname;
+    if (seenMedia.has(key)) return;
+    seenMedia.add(key);
+    containers.push(container);
   });
+
+  return containers;
 }
 
 function inferMergeLayout(_containers) {
@@ -591,11 +623,14 @@ function scanVideos() {
 }
 
 function scanImages() {
-  document.querySelectorAll('[data-testid="tweetPhoto"]').forEach((container) => {
-    if (container.querySelector("video")) return;
-    if (container.querySelector('[data-testid="videoPlayer"]')) return;
-    const img = container.querySelector("img");
-    if (!img || isVideoThumbnail(img)) return;
+  // Covers both the timeline and X's separate Media Viewer portal.
+  document.querySelectorAll("img").forEach((img) => {
+    if (!isTweetMediaImage(img)) return;
+    if (!img.closest('article, [aria-label="Media Viewer"]')) return;
+    if (img.closest('[data-testid="videoPlayer"], [data-testid="videoComponent"]')) return;
+
+    const container = photoContainerFor(img);
+    if (!container || container.querySelector("video")) return;
     addImageButtons(container, img);
   });
 }
